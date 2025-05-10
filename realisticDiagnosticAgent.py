@@ -1,7 +1,10 @@
-#Jesus Ortega
-#Omar Marquez
-#Orion Wood
 """
+Jesus Ortega - 80421772
+Agustin Omar Marquez - 80575895
+Orion Wood - 80537518
+
+CS4320 - Final Project - Health Diagnostic Decision Support
+
 This program loads a real-world dataset of patient symptom reports and diagnoses,
 builds a joint probability distribution, and performs inference by enumeration
 to determine the most likely diseases given observed symptoms.
@@ -59,7 +62,7 @@ def enumerationInference(jointProbability, queryVector, numDiseases):
         4: list(range(numDiseases)),
     }
     #for each possible value of the query variable, sum over all other variables (s1, s2, etc.)
-    for qval in domains[queryIndex]:
+    for queryValue in domains[queryIndex]:
         total = 0.0
         for s1 in domains[0] if queryVector[0] < 0 else [queryVector[0]]:
             for s2 in domains[1] if queryVector[1] < 0 else [queryVector[1]]:
@@ -67,17 +70,15 @@ def enumerationInference(jointProbability, queryVector, numDiseases):
                     for s4 in domains[3] if queryVector[3] < 0 else [queryVector[3]]:
                         for cond in domains[4] if queryVector[4] < 0 else [queryVector[4]]:
                             assignment = [s1, s2, s3, s4, cond]
-                            if assignment[queryIndex] == qval:  #if the assignment matches the query value, add probability to total
+                            if assignment[queryIndex] == queryValue:  #if the assignment matches the query value, add probability to total
                                 total += jointProbability[s1, s2, s3, s4, cond]
-        result[qval] = total    #result for this query value equals the total probability
+        result[queryValue] = total    #result for this query value equals the total probability
 
-    totalProbability = sum(result.values())
-    if totalProbability > 0:
+    totalProbability = sum(result.values()) #sum up all (unnormalized) probabilities
+    if totalProbability > 0:    #if the total probability is greater than 0, normalize the result
         for k in result:
             result[k] /= totalProbability
-
     return result
-
 
 print("\nMarginal Probabilities for Symptoms:")
 for i in range(4):
@@ -89,20 +90,61 @@ for i in range(4):
         print(f"  Value {k}: {v * 100:.2f}%")
 print("\nTop 5 Most Likely Conditions (Marginal Probabilities):")
 qv = [-1, -1, -1, -1, -2]  # Querying the disease
-condition_result = enumerationInference(jointProbability, qv, numDiseases)
-sorted_conditions = sorted(condition_result.items(), key=lambda x: -x[1])  # Sort by descending probability
-for k, v in sorted_conditions[:5]:
-    disease_name = diseaseLabeler.inverse_transform([k])[0]
-    print(f"  {disease_name}: {v * 100:.2f}%")
+conditionResult = enumerationInference(jointProbability, qv, numDiseases)
+sortedConditions = sorted(conditionResult.items(), key=lambda x: -x[1])  # Sort by descending probability
+for k, v in sortedConditions[:5]:
+    diseaseName = diseaseLabeler.inverse_transform([k])[0]
+    print(f"  {diseaseName}: {v * 100:.2f}%")
 
-
-
-
+"""
 # EXAMPLE USAGE
-query_vector = [1, 1, -1, 1, -2]  # Fever=1, Cough=1, Fatigue=?, Breathing=1, query Disease
-posterior = enumerationInference(jointProbability, query_vector, numDiseases)
+queryVector = [1, 1, -1, 1, -2]  # Fever=1, Cough=1, Fatigue=?, Breathing=1, query Disease
+posterior = enumerationInference(jointProbability, queryVector, numDiseases)
 
 # Show top 5 diseases with probabilities
-top_results = sorted(posterior.items(), key=lambda x: -x[1])[:5]
-for i, prob in top_results:
+topResults = sorted(posterior.items(), key=lambda x: -x[1])[:5]
+for i, prob in topResults:
     print(f"{diseaseLabeler.inverse_transform([i])[0]}: {prob*100:.2f}%")
+"""
+
+#User input for symptoms
+def userDiagnoser(jointProbability, diseaseLabeler, numDiseases):
+    #prompts the user for their symptoms
+    print("\n --- Diagnistic Agent ---\n Please answer the following questions with 'yes', 'no', or 'unknown':")
+    symptomPrompts = [
+        "Do you have a fever?\n",
+        "Do you have a cough?\n",
+        "Do you feel fatigued?\n",
+        "Do you have difficulty breathing?\n"
+    ]
+    userSymptoms = []
+    for prompt in symptomPrompts:
+        while True:
+            response = input(prompt).strip().lower()
+            if response == 'unknown' or response == 'u':
+                userSymptoms.append(-1)
+                break
+            elif response == 'no' or response == 'n':
+                userSymptoms.append(0)
+                break
+            elif response == 'yes' or response == 'y':
+                userSymptoms.append(1)
+                break
+            else:
+                print("Invalid input. Please answer with 'yes', 'no', or 'unknown'.")
+    userSymptoms.append(-2)  # Placeholder for disease query
+    # Perform inference using user symptoms
+    userPosterior = enumerationInference(jointProbability, userSymptoms, numDiseases)
+    # Show top 5 diseases with probabilities
+    print("\nTop 5 Most Likely Conditions Based on Your Symptoms, and Associated Percentages: ")
+    topDiseases = sorted(userPosterior.items(), key=lambda x: -x[1])[:5]
+    for i, probability in topDiseases:
+        diseaseName = diseaseLabeler.inverse_transform([i])[0]
+        print(f"  {diseaseName}: {probability * 100:.2f}%")
+#loop to allow multiple diagnoses, if wanted
+while True:
+    userDiagnoser(jointProbability, diseaseLabeler, numDiseases)
+    goAgain = input("\nWould you like to diagnose someone else? (yes/no): ").strip().lower()
+    if goAgain != 'yes' and goAgain != 'y':
+        print("Ending diagnostic agent. Goodbye!")
+        break
