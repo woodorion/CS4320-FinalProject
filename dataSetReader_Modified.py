@@ -1,9 +1,14 @@
 #Jesus Ortega
 #Omar Marquez
 #Orion Wood
+"""
+This program loads a simplified medical dataset with binary symptoms and diagnosis labels.
+It builds a full joint probability distribution and performs both marginal and conditional
+inference using enumeration.
+"""
 import pandas as pd
 import numpy as np
-from collections import defaultdict     # Automatically initializes new keys with a default value
+from collections import defaultdict     # Used to automatically initialize new keys with a default value
 
 # Load CSV file
 data = pd.read_csv('Health_Data_Set.csv', header=None)
@@ -14,7 +19,6 @@ data = data[1:]
 
 # Count occurrences of each unique (s1, s2, s3, s4, diagnosis)
 counts = defaultdict(int)
-
 for row in data:
     key = tuple(row)  # (s1, s2, s3, s4, diagnosis)
     counts[key] += 1
@@ -26,10 +30,12 @@ total = len(data)
 joint_prob = np.zeros((2, 2, 2, 2, 4))
 
 for key, count in counts.items():
+    #Fill the joint probability table
+    #Calculate/print the conditional probabilities of each diagnosis given some symptoms
     print(f"Key: {key}, Count: {count}")
     s1, s2, s3, s4, diag = key
     joint_prob[int(s1), int(s2), int(s3), int(s4), int(diag)] = count / total  # normalize
-    # Grab the joint probabilities for all 4 diagnoses at this symptom config
+    # Grab the joint probabilities for all 4 diagnoses at this symptom configuration
     diagnosis_probs = joint_prob[int(s1), int(s2), int(s3), int(s4), :]
 
     # Normalize to get conditional probability P(diagnosis | symptoms)
@@ -39,13 +45,10 @@ for key, count in counts.items():
     else:
         posterior = np.zeros_like(diagnosis_probs)  # or handle zero-case with smoothing
 
-    # Print it out
+    # Print
     for diag, prob in enumerate(posterior):
-        print(f"P(diagnosis = {diag} | symptoms = [{int(s1)}, {int(s2)}, {int(s3)}, {int(s4)}]) = {prob:.3f}")
-    print()  # Newline for readability
-
-# Done — joint_prob is your full distribution
-# Now you can use joint_prob for further analysis or modeling
+        print(f"P(diagnosis = {diag} | symptoms = [{int(s1)}, {int(s2)}, {int(s3)}, {int(s4)}]) = {prob*100:.3f}%")
+    print()
 
 print("Inference for P(diagnosis | s1=1):")
 
