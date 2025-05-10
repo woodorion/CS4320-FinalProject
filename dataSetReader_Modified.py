@@ -1,6 +1,9 @@
+#Jesus Ortega
+#Omar Marquez
+#Orion Wood
 import pandas as pd
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict     # Automatically initializes new keys with a default value
 
 # Load CSV file
 data = pd.read_csv('Health_Data_Set.csv', header=None)

@@ -1,7 +1,10 @@
+#Jesus Ortega
+#Omar Marquez
+#Orion Wood
 import pandas as pd
 import numpy as np
-from collections import defaultdict
-from sklearn.preprocessing import LabelEncoder
+from collections import defaultdict     # Automatically initializes new keys with a default value
+from sklearn.preprocessing import LabelEncoder  # For converting string disease names to integers (or vice versa)
 
 # Load dataset
 df = pd.read_csv("Disease_symptom_and_patient_profile_dataset.csv")
